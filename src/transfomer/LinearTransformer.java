@@ -12,7 +12,7 @@ public class LinearTransformer implements Transformer {
       b: upper bound of src zone.
       c: lower bound of target zone.
       d: upper bound of target zone.
-      g(x,y) = (d - c) / (b - a) * (f(x,y) - a) + c
+      g(x,y) = a
      */
     public int[][] transform(int[][] gray, HashMap<String, Double> args) {
         int width = gray[0].length;

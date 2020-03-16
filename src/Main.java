@@ -20,11 +20,16 @@ public class Main {
 
         int[][] target;
         // Judge process type
-        if (type.equals("balance")) {
+        if(type.equals("gray")){
+            System.out.println("[灰度图]");
+            target = gray;
+        }
+        else if (type.equals("balance")) {
             int scale = Integer.parseInt(args[3]);
             System.out.println(String.format("[直方图修正] 离散分级数 %d", scale));
             target = ImageProcessTools.grayBalance(gray, scale);
-        } else {
+        }
+        else {
             HashMap<String, Double> targs = new HashMap<>();
             Transformer transformer;
             targs.put("a", Double.parseDouble(args[3]));
@@ -37,24 +42,24 @@ public class Main {
             switch (type) {
                 case "linear":
                     transformer = new LinearTransformer();
-                    System.out.println(String.format("[线性变换] a:%03f b:%03f, c:%03f, d:%03f",
+                    System.out.println(String.format("[线性变换] a:%.2f b:%.2f, c:%.2f, d:%.2f",
                             targs.get("a"), targs.get("b"), targs.get("c"), targs.get("d")));
                     break;
                 case "exp":
                     transformer = new ExpTransformer();
-                    System.out.println(String.format("[幂指数变换] a:%03f b:%03f, c:%03f",
+                    System.out.println(String.format("[幂指数变换] a:%.2f b:%.2f, c:%.2f",
                             targs.get("a"), targs.get("b"), targs.get("c")));
                     break;
                 case "log":
                     transformer = new LogTransformer();
-                    System.out.println(String.format("[对数变换] a:%03f b:%03f, c:%03f",
+                    System.out.println(String.format("[对数变换] a:%.2f b:%.2f, c:%.2f",
                             targs.get("a"), targs.get("b"), targs.get("c")));
                     break;
                 default:
                     throw new Exception(String.format("No Support for %s", type));
             }
 
-            target = transformer.transform(gray, targs);
+            target = ImageProcessTools.grayTransformation(gray, transformer, targs);
         }
 
         // Export image

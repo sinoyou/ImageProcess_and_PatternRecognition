@@ -1,3 +1,4 @@
+import transfomer.ExpTransformer;
 import transfomer.Transformer;
 
 import java.awt.*;
@@ -74,7 +75,7 @@ public class ImageProcessTools {
      * @param transformer Linear Transformer.
      * @return transformed.
      */
-    public static int[][] grayLinearTransformation(int[][] data, Transformer transformer, HashMap<String, Double> args) {
+    public static int[][] grayTransformation(int[][] data, Transformer transformer, HashMap<String, Double> args) {
         int[][] transformed = transformer.transform(data, args);
         clip(transformed);
         return transformed;

@@ -6,7 +6,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
-public class BmpDumper {
+public class BmpDumper{
     public static void dumpGray(int[][] data, String path) throws IOException {
         BufferedImage gray =
                 new BufferedImage(data[0].length, data.length, BufferedImage.TYPE_INT_RGB);
