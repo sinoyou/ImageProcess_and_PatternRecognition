@@ -1,4 +1,4 @@
-package io;
+package gray.io;
 
 import java.awt.*;
 import java.io.BufferedInputStream;
@@ -36,7 +36,7 @@ public class BmpReader {
         // bis.read(temp, 0x1c, 4);
         read4(bis, 0x1c, temp);
         if (!(temp[0] == 0x18 && temp[1] == 0 && temp[2] == 0 && temp[3] == 0)) {
-            throw new Exception("io.BmpReader only support 24 bit quantization without compressed.");
+            throw new Exception("gray.io.BmpReader only support 24 bit quantization without compressed.");
         }
 
         // Start Read Image Data

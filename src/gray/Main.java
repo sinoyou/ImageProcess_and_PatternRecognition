@@ -1,9 +1,11 @@
-import io.BmpDumper;
-import io.BmpReader;
-import transfomer.ExpTransformer;
-import transfomer.LinearTransformer;
-import transfomer.LogTransformer;
-import transfomer.Transformer;
+package gray;
+
+import gray.io.BmpDumper;
+import gray.io.BmpReader;
+import gray.transfomer.ExpTransformer;
+import gray.transfomer.LinearTransformer;
+import gray.transfomer.LogTransformer;
+import gray.transfomer.Transformer;
 
 import java.awt.*;
 import java.util.HashMap;
@@ -67,10 +69,10 @@ public class Main {
 
 //        String image = "pandas.bmp";
 //        Color[][] colorBmp = BmpReader.readImage(image);
-//        int[][] gray = ImageProcessTools.getGray(colorBmp);
+//        int[][] gray = gray.ImageProcessTools.getGray(colorBmp);
 //
 //        String balance = "balance-pandas.bmp";
-//        int[][] balanceGray = ImageProcessTools.grayBalance(gray, 5);
+//        int[][] balanceGray = gray.ImageProcessTools.grayBalance(gray, 5);
 //        BmpDumper.dumpGray(balanceGray, balance);
 //
 //        String linear = "linear-pandas.bmp";

@@ -1,4 +1,4 @@
-package io;
+package gray.io;
 
 import javax.imageio.ImageIO;
 import java.awt.*;

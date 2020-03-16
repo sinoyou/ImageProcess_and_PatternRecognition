@@ -1,5 +1,6 @@
-import transfomer.ExpTransformer;
-import transfomer.Transformer;
+package gray;
+
+import gray.transfomer.Transformer;
 
 import java.awt.*;
 import java.util.HashMap;

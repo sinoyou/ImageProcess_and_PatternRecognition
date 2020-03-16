@@ -1,16 +1,18 @@
-package transfomer;
+package gray.transfomer;
 
 import java.util.HashMap;
 
-public class ExpTransformer implements Transformer {
+import static java.lang.StrictMath.E;
+
+public class LogTransformer implements Transformer {
     @Override
     /*
-      幂指数变换
+      对数数变换：
       Keys in args:
       a: base
-      b: power base
-      c: scale
-      g(x,y) = b ** (c * (f(x,y) - a)) - 1
+      b: scale of diver
+      c: diver
+      g(x,y) = a + ln(f(x, y) + 1) / (b * ln(c))
      */
     public int[][] transform(int[][] gray, HashMap<String, Double> args) {
         int width = gray[0].length;
@@ -24,7 +26,7 @@ public class ExpTransformer implements Transformer {
         for(int h = 0; h < height; h++){
             for(int w = 0; w < width; w++){
                 int src = gray[h][w];
-                target[h][w] = (int)(Math.pow(b, c * (src - a)) - 1);
+                target[h][w] = (int)(a + (Math.log(src + 1) / Math.log(E)) / (b * Math.log(c) / Math.log(E)));
             }
         }
         return target;
