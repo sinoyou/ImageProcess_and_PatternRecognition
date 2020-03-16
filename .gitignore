@@ -2,3 +2,5 @@ out/
 *.bmp
 .idea/
 *.iml
+src/META-INF
+out
