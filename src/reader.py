@@ -26,7 +26,7 @@ class ImageIO:
         :param frequency_domain: Frequency Domain
         :param center: if True, reverse to highlight center
         """
-        f = 1 + np.log(np.abs(frequency_domain))
+        f = 1 + np.log1p(np.real(frequency_domain))
         f = (f - np.min(f)) / (np.max(f) - np.min(f))
         if center:
             f = mirror(f)
@@ -34,17 +34,25 @@ class ImageIO:
         return f
 
     @staticmethod
-    def imshows(arrays):
-        img_count = len(arrays)
-        fig, axes = plt.subplots(1, img_count)
-        if img_count == 1:
-            axes = [axes]
-        for index, array in enumerate(arrays):
-            if np.max(array) <= 1:
-                array = (array * 255).astype(np.int)
-            if len(array.shape) == 2:
-                array = np.stack([array, array, array], axis=2)
-            axes[index].imshow(array)
+    def imshows(arrays, size=4):
+        if isinstance(arrays[0], list):
+            row = len(arrays)
+            col = len(arrays[0])
+        else:
+            arrays = [arrays]
+            row = len(arrays)
+            col = len(arrays[0])
+        fig, axes = plt.subplots(row, col, figsize=(size * col, size * row), squeeze=False)
+
+        for _row in range(row):
+            for _col in range(col):
+                array = arrays[_row][_col]
+                array = np.real(array)
+                if np.max(array) <= 1:
+                    array = (array * 255).astype(np.int)
+                if len(array.shape) == 2:
+                    array = np.stack([array, array, array], axis=2)
+                axes[_row][_col].imshow(array)
         fig.show()
 
 

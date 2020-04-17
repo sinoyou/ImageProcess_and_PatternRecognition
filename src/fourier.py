@@ -1,5 +1,6 @@
 import numpy as np
 from src.reader import ImageIO
+from src.frequency_domain_filter import *
 
 
 class Fourier:
@@ -12,13 +13,13 @@ class Fourier:
         self.cache_filtered_frequency = self.frequency_domain
         self.cache_space_domain = None
 
-    def apply_frequency_filter(self, func):
+    def apply_frequency_filter(self, func, **kwargs):
         """
         Apply a filter to the frequency domain.
         :param func: function
         """
-        if not func:
-            self.cache_filtered_frequency = func(self.cache_filtered_frequency)
+        if func:
+            self.cache_filtered_frequency = func(self.frequency_domain, **kwargs)
             self.cache_space_domain = None
 
     def get_raw_frequency_domain(self):
@@ -44,7 +45,7 @@ class Fourier:
         Return 2D array with range (0, 1) or complex
         """
         if not self.cache_space_domain:
-            self.cache_space_domain = reverse_fourier_domain(self.cache_filtered_frequency)
+            self.cache_space_domain = self.inverse_fourier_transform(self.cache_filtered_frequency)
 
         if real:
             return np.real(self.cache_space_domain)
@@ -67,7 +68,7 @@ class Fourier:
         return fre_result
 
     @staticmethod
-    def reverse_fourier_transform(fre_domain_2d, size=None):
+    def inverse_fourier_transform(fre_domain_2d, size=None):
         if not size:
             m, n = fre_domain_2d.shape
         else:
@@ -90,10 +91,14 @@ if __name__ == '__main__':
     gray_array = io.get_gray()
     fourier = Fourier(gray_array)
 
-    raw_space_domain = fourier.get_raw_space_domain()
-    raw_fre_domain = fourier.get_raw_frequency_domain()
+    # 原始内容
+    raw_space = fourier.get_raw_space_domain()
+    raw_fre_v = ImageIO.get_visual_frequency_domain(fourier.get_raw_frequency_domain(), center=True)
 
-    frequency_visual = ImageIO.get_visual_frequency_domain(fourier.frequency_domain, center=True)
-    enlarge_space_domain = Fourier.reverse_fourier_transform(raw_fre_domain, size=(200, 200))
+    # 理想低通滤波器 - clip = 50
+    fourier.apply_frequency_filter(ideal_low_pass_filter, clip_d=50)
+    lpf_space = fourier.get_filter_space_domain()
+    lpf_fre = fourier.get_filter_frequency_domain()
+    lpf_fre_v = ImageIO.get_visual_frequency_domain(lpf_fre, center=True)
 
-    ImageIO.imshows([frequency_visual, raw_space_domain, np.real(enlarge_space_domain)])
+    ImageIO.imshows([raw_space, raw_fre_v, lpf_space, lpf_fre_v])
