@@ -26,7 +26,7 @@ class ImageIO:
         :param frequency_domain: Frequency Domain
         :param center: if True, reverse to highlight center
         """
-        f = 1 + np.log1p(np.real(frequency_domain))
+        f = np.log1p(np.abs(frequency_domain))
         f = (f - np.min(f)) / (np.max(f) - np.min(f))
         if center:
             f = mirror(f)

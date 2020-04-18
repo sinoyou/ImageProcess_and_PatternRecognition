@@ -48,3 +48,22 @@ def butterworth_low_pass_filter(fre_domain, **kwargs):
             mask[h][w] = 1.0 / (1.0 + d / (clip_d ** 2))
     result = mirror(np.multiply(mask, mirror_fre_domain))
     return result
+
+
+def double_butterworth_filter(fre_domain, **kwargs):
+    l_clip_d = kwargs['l_clip_d']
+    h_clip_d = kwargs['h_clip_d']
+    exp_rate = kwargs['exp_rate']
+
+    height, width = fre_domain.shape
+    center = height // 2, width // 2
+    mirror_fre_domain = mirror(fre_domain)
+    mask = np.zeros_like(fre_domain)
+    for h in range(height):
+        for w in range(width):
+            d = np.sqrt((h - center[0]) ** 2 + (w - center[1]) ** 2)
+            mask_l = 1.0 / (1.0 + (d / l_clip_d) ** exp_rate)
+            mask_h = 1 - 1.0 / (1.0 + (d / h_clip_d) ** exp_rate)
+            mask[h][w] = mask_l + mask_h
+    result = mirror(np.multiply(mask, mirror_fre_domain))
+    return result
