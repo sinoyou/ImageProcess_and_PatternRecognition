@@ -35,7 +35,7 @@ class Consine:
             else:
                 return 1.0
 
-        fre_result = np.zeros_like(time_domain_2d, dtype=complex)
+        fre_result = np.zeros_like(time_domain_2d, dtype=float)
         m, n = time_domain_2d.shape
         for _m in range(0, m):
             row_vector = get_c(_m) * np.cos((2 * np.arange(0, m, 1.0) + 1) * _m * np.pi / (2 * m))
@@ -56,17 +56,21 @@ class Consine:
 
         def get_c(loc):
             if loc == 0:
-                return 1 / np.sqrt(2)
+                return 1.0 / np.sqrt(2)
             else:
                 return 1
 
         fre_m, fre_n = fre_domain_2d.shape
 
-        space_domain = np.zeros((m, n)).astype(complex)
+        space_domain = np.zeros((m, n)).astype(float)
         for _m in range(0, m):
-            row_vector = get_c(_m) * np.cos((2 * np.arange(0, fre_m, 1.0) + 1) * _m * np.pi / (2 * m))
+            c_m = np.ones(fre_m)
+            c_m[0] = get_c(0)
+            row_vector = c_m * np.cos((2 * _m + 1) * np.arange(0, fre_m, 1.0) * np.pi / (2 * m))
             for _n in range(0, n):
-                col_vector = get_c(_n) * np.cos((2 * np.arange(0, fre_n, 1.0) + 1) * _n * np.pi / (2 * n))
+                c_n = np.ones(fre_n)
+                c_n[0] = get_c(0)
+                col_vector = c_n * np.cos((2 * _n + 1) * np.arange(0, fre_n, 1.0) * np.pi / (2 * n))
                 space_domain[_m][_n] = np.dot(np.dot(row_vector, fre_domain_2d), col_vector)
 
         return space_domain * 2 / np.sqrt(n * m)
@@ -81,5 +85,5 @@ if __name__ == '__main__':
     raw_space = consine.get_raw_space_domain()
     raw_fre = consine.get_raw_frequency_domain()
     raw_fre_v = ImageIO.get_visual_frequency_domain(raw_fre, center=False)
-    squeeze_image = Consine.inverse_cosine_transform(raw_fre, size=(200, 200))
+    squeeze_image = Consine.inverse_cosine_transform(raw_fre, size=(137, 137))
     ImageIO.imshows([raw_fre_v, squeeze_image])
