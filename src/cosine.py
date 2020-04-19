@@ -13,17 +13,41 @@ class Consine:
         self.cache_filtered_frequency = self.frequency_domain
         self.cache_space_domain = None
 
+    def apply_frequency_filter(self, func, **kwargs):
+        """
+        Apply a filter to the frequency domain.
+        :param func: function
+        """
+        if func:
+            self.cache_filtered_frequency = func(self.frequency_domain, **kwargs)
+            self.cache_space_domain = None
+
     def get_raw_frequency_domain(self):
         """
         Get original frequency domain from original image. 2D array of complex
         """
         return self.frequency_domain
 
+    def get_filter_frequency_domain(self):
+        """
+        Get filtered frequency domain after applying filters on original frequency domain. 2D array of complex
+        """
+        return self.cache_filtered_frequency
+
     def get_raw_space_domain(self):
         """
         Return 2D array with range (0, 1)
         """
         return self.space_domain
+
+    def get_filter_space_domain(self):
+        """
+        Return 2D array with range (0, 1) or complex
+        """
+        if not self.cache_space_domain:
+            self.cache_space_domain = self.inverse_cosine_transform(self.cache_filtered_frequency)
+
+        return self.cache_space_domain
 
     @staticmethod
     def cosine_transform(time_domain_2d):
@@ -85,5 +109,11 @@ if __name__ == '__main__':
     raw_space = consine.get_raw_space_domain()
     raw_fre = consine.get_raw_frequency_domain()
     raw_fre_v = ImageIO.get_visual_frequency_domain(raw_fre, center=False)
-    squeeze_image = Consine.inverse_cosine_transform(raw_fre, size=(137, 137))
-    ImageIO.imshows([raw_fre_v, squeeze_image])
+    # ImageIO.imshows([raw_fre_v, raw_space])
+
+    # 图像压缩
+    consine.apply_frequency_filter(cosine_compress, c_size_r=100)
+    c_fre = consine.get_filter_frequency_domain()
+    c_fre_v = ImageIO.get_visual_frequency_domain(c_fre, center=False)
+    c_space = consine.get_filter_space_domain()
+    ImageIO.imshows([[raw_fre_v, raw_space], [c_fre_v, c_space]])

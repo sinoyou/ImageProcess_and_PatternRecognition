@@ -67,3 +67,17 @@ def double_butterworth_filter(fre_domain, **kwargs):
             mask[h][w] = mask_l + mask_h
     result = mirror(np.multiply(mask, mirror_fre_domain))
     return result
+
+
+def cosine_compress(fre_domain, **kwargs):
+    """
+    对DCT变换后的频域信息进行压缩，仅取左上角的内容，剩余内容为黑色
+    """
+    c_size_r = kwargs['c_size_r']
+    _mask = np.zeros_like(fre_domain)
+    m, n = fre_domain.shape
+    for _m in range(m):
+        for _n in range(n):
+            if _m ** 2 + _n ** 2 <= c_size_r ** 2:
+                _mask[_m][_n] = 1.0
+    return fre_domain * _mask
