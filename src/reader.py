@@ -20,13 +20,17 @@ class ImageIO:
             return self.gray_array
 
     @staticmethod
-    def get_visual_frequency_domain(frequency_domain, center=True):
+    def get_visual_frequency_domain(frequency_domain, center=True, log=True):
         """
         Transform Frequency Domain Image to a visible format. [0 - 1]
         :param frequency_domain: Frequency Domain
         :param center: if True, reverse to highlight center
         """
-        f = np.log1p(np.abs(frequency_domain))
+        if log:
+            f = np.log1p(np.abs(frequency_domain))
+        else:
+            f = np.abs(frequency_domain)
+
         f = (f - np.min(f)) / (np.max(f) - np.min(f))
         if center:
             f = mirror(f)

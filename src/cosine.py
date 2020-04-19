@@ -3,7 +3,7 @@ from src.reader import ImageIO
 from src.frequency_domain_filter import *
 
 
-class Consine:
+class Cosine:
     def __init__(self, array_2d):
         assert len(array_2d.shape) == 2
         self.space_domain = array_2d
@@ -103,7 +103,7 @@ class Consine:
 if __name__ == '__main__':
     io = ImageIO('../image/lena.jpg')
     gray_array = io.get_gray()
-    consine = Consine(gray_array)
+    consine = Cosine(gray_array)
 
     # 原始内容
     raw_space = consine.get_raw_space_domain()
