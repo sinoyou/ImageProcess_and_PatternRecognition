@@ -81,3 +81,11 @@ def cosine_compress(fre_domain, **kwargs):
             if _m ** 2 + _n ** 2 <= c_size_r ** 2:
                 _mask[_m][_n] = 1.0
     return fre_domain * _mask
+
+
+def cosine_tuple_compress(fre_domain, **kwargs):
+    _sort = list(np.reshape(fre_domain, -1))
+    _sort = sorted(_sort)
+    _clip = _sort[int(len(_sort) * kwargs['clip_rate'])]
+    fre_domain[fre_domain < _clip] = 0
+    return fre_domain
