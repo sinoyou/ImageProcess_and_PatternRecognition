@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
-from src.utils import mirror
+from src.FourierTransformation.src.utils import mirror
 
 
 class ImageIO:
@@ -11,7 +11,13 @@ class ImageIO:
         self.gray_array = np.array(color_image.convert('L'), dtype=int)
 
     def get_color(self):
-        return self.color_array
+        """
+        Return (Y, U, V) as order.
+        :return:
+        """
+        U = (self.color_array[..., 2] - self.gray_array) / 1.772
+        V = (self.color_array[..., 0] - self.gray_array) / 1.402
+        return self.gray_array, U.astype(np.int), V.astype(np.int)
 
     def get_gray(self, norm=True):
         if norm:

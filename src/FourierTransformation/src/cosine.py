@@ -1,6 +1,6 @@
 import numpy as np
-from src.reader import ImageIO
-from src.frequency_domain_filter import *
+from src.FourierTransformation.src.reader import ImageIO
+from src.FourierTransformation.src.frequency_domain_filter import *
 
 
 class Cosine:
