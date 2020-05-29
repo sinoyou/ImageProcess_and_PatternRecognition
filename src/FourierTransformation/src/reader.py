@@ -26,6 +26,14 @@ class ImageIO:
             return self.gray_array
 
     @staticmethod
+    def yuv_to_rgb(yuv_list):
+        Y, U, V = yuv_list[0], yuv_list[1], yuv_list[2]
+        R = Y + 1.4075 * (V - 128)
+        G = Y - 0.3455 * (U - 128) - 0.7169 * (V - 128)
+        B = Y + 1.779 * (U - 128)
+        return [R.astype(int), G.astype(int), B.astype(int)]
+
+    @staticmethod
     def get_visual_frequency_domain(frequency_domain, center=True, log=True):
         """
         Transform Frequency Domain Image to a visible format. [0 - 1]

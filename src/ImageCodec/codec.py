@@ -8,7 +8,7 @@ from src.ImageCodec.quantization import quantize, back_quantize
 class ImageCodec:
     def __init__(self, raw_path, quantization, gray=False):
         image_io = ImageIO(raw_path)
-        self.quantization = quantization
+        self.quantization = quantization if isinstance(quantization, list) else [quantization]
         self.is_gray = gray
         self.raw_yuv = image_io.color_array()
 
@@ -55,14 +55,19 @@ class ImageCodec:
         dct_quantize_block = np.zeros((self.padding_h / 8, self.padding_w / 8), dtype=int)
 
         # loop for different channels in YUV
-        for channel in self.padding_yuv:
+        for index, channel in enumerate(self.padding_yuv):
             # loop for height
             for ib in range(self.padding_h / 8):
                 # loop for width
                 for jb in range(self.padding_w / 8):
                     space_block[ib, jb] = channel[ib * 8: ib * 8 + 8, jb * 8: jb * 8 + 8] - 128
                     dct_block = Cosine.cosine_transform(space_block[ib, jb])
-                    dct_quantize_block = dct_block[ib, jb] / self.quantization
+                    # support single quantization matrix or double quantization matrix.
+                    if len(self.quantization) == 2 and index > 0:
+                        dct_quantize_block = dct_block[ib, jb] / self.quantization[1]
+                    else:
+                        dct_quantize_block = dct_block[ib, jb] / self.quantization[0]
+
             result.append({'space_block': space_block,
                            'dct_block': dct_block,
                            'dct_quantize_block': dct_quantize_block})
@@ -97,7 +102,7 @@ class ImageCodec:
     def get_compressed_image(self):
         """
         Revert Image singal of blocks into original [padding_height, padding_width] shape.
-        :return: list of (Y, U, V)
+        :return: list of (Y, U, V) [0, 255]
         """
         result = []
 
@@ -106,7 +111,7 @@ class ImageCodec:
             holder = np.zeros((self.padding_h, self.padding_w))
             for ib in range(self.padding_h / 8):
                 for jb in range(self.padding_w / 8):
-                    holder[ib * 8: ib * 8 + 8, jb * 8: jb * 8 + 8] = channel['compress_space_block'][ib, jb]
+                    holder[ib * 8: ib * 8 + 8, jb * 8: jb * 8 + 8] = channel['compress_space_block'][ib, jb] + 128
             result.append(holder)
 
         return result
@@ -116,8 +121,11 @@ class ImageCodec:
             src = self.raw_yuv[0]
             dst = self.compressed_yuv[0]
         else:
-            src = np.stack(self.raw_yuv, axis=2)
-            dst = np.stack(self.compressed_yuv, axis=2)
+            src = np.stack(ImageIO.yuv_to_rgb(self.raw_yuv), axis=2)
+            dst = np.stack(ImageIO.yuv_to_rgb(self.compressed_yuv), axis=2)
+
+        src = src[self.real_h, self.real_w]
+        dst = dst[self.real_h, self.real_w]
 
         if compare:
             axes[0].imshow(src)
