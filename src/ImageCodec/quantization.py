@@ -1,5 +1,6 @@
 import numpy as np
 
+# ref https://www.impulseadventure.com/photo/jpeg-quantization.html
 canon_digital_fine_chr = np.array([
     [4, 4, 5, 9, 15, 26, 26, 26],
     [4, 4, 5, 10, 19, 26, 26, 26],
