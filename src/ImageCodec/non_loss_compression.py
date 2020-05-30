@@ -224,7 +224,7 @@ if __name__ == '__main__':
     demo[1, 1] = demp_matrix
 
     encoder = DpcmRlcEncoder(demo)
-    print(encoder.to_string('middle-raw', 0, 0))
-    print(encoder.to_string('bit-raw', 0, 0))
-    print(encoder.to_string('middle-vli', 0, 0))
-    print(encoder.to_string('bit-vli', 0, 0))
+    print(encoder.to_string('middle-raw', 0, 1))
+    print(encoder.to_string('bit-raw', 0, 1))
+    print(encoder.to_string('middle-vli', 0, 1))
+    print(encoder.to_string('bit-vli', 0, 1))
