@@ -15,9 +15,12 @@ class ImageIO:
         Return (Y, U, V) as order.
         :return:
         """
-        U = (self.color_array[..., 2] - self.gray_array) / 1.772
-        V = (self.color_array[..., 0] - self.gray_array) / 1.402
-        return self.gray_array, U.astype(np.int), V.astype(np.int)
+        R, G, B = [np.squeeze(x, axis=-1) for x in np.split(self.color_array, 3, axis=-1)]
+        Y = 0.299 * R + 0.587 * G + 0.114 * B
+        U = -0.169 * R - 0.331 * G + 0.5 * B + 128
+        V = 0.5 * R - 0.419 * G - 0.081 * B + 128
+        yuv = [Y.astype(int), U.astype(int), V.astype(int)]
+        return yuv
 
     def get_gray(self, norm=True):
         if norm:
