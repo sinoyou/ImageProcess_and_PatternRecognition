@@ -5,6 +5,10 @@ from src.FourierTransformation.src.cosine import Cosine
 from src.ImageCodec.quantization import quantize, back_quantize
 import src.ImageCodec.quantization as quant
 
+# non loss compression
+from src.ImageCodec.non_loss_compression import DpcmRlcEncoder
+from src.ImageCodec.CanonicalHuffman import CanonicalHuffman
+
 
 class ImageCodec:
     def __init__(self, raw_path, quantization, gray=False):
@@ -167,7 +171,157 @@ class ImageCodec:
 
     def storage_compress_evaluate(self):
         # 使用DC + AC 分流的Huffman Baseline 编码技术
-        pass
+        # 测试策略：
+        #   A：BMP图片
+        #   B：DCT + DPCM + RLC
+        #   C: DCT + DPCM(VLI) + RLC(VLI)
+        #   D: DCT + DPCM + RLC + Huffman
+        #   E: DCT + DPCM(VLI) + RLC(VLI) + Huffman
+        # 测试数据范围：Huffman表，编码后的二进制数据
+        # 涉及的固定位二进制数：
+        #   DPCM.value: 16 bit, 表示DCT频域的值，有DCT公式可知至少需要12位，为适配字节大小选择16bit = 2 byte。
+        #   RLC.pre_zero: 4bit，表示前置0的个数，超过15个时需要分块表示。
+        #   RLC.value: 16 bit，表示RLC编码后的非零数值，长度原理同DPCM.value
+        #   DPCM(VLI).row: 4 bit，DPCM.value经过VLI编码后，value值所在VLI表的行号。
+        #   RLC(VLI).row：4 bit，RLC.value经过VLI编码，value值所在VLI表的行号。
+        # 涉及的变长二进制数：
+        #   DPCM(VLI).index：长度有计算机解析DPCM(VLI).row后得到。
+        #   RLC(VLI).row: 长度由计算机解析RLC(VLI).row后得到。
+        #   Huffman：所有固定位的二进制数均可使用此编码技术
+        # 参考
+        # 1. https://blog.csdn.net/my_happy_life/article/details/82997597
+        # 2. https://zhuanlan.zhihu.com/p/72044095
+        # A BMP
+        baseline = self.real_w * self.real_h * 3 * 8  # size * channels * (0~255)
+
+        channels = [c['dct_quantize_block'] for c in self.encode_list]
+        print('>>> @Channel_Y[0][0]')
+        print(channels[0][0][0])
+        print('>>>')
+
+        # B DCT + DPCM + RLC
+        size_dct_dpcm_rlc = 0
+        for index, channel in enumerate(channels):
+            encoder = DpcmRlcEncoder(channel)
+            for h in range(channel.shape[0]):
+                for w in range(channel.shape[1]):
+                    str_unit = encoder.to_string('bit-raw', h, w).replace(' ', '').replace('.', '')
+                    size_dct_dpcm_rlc += len(str_unit)
+            if index == 0:
+                print('>>> DCT + DPCM + RLC')
+                print('Debug: @Channel_Y[0][0]')
+                print(encoder.to_string('middle-raw', 0, 0))
+                print(encoder.to_string('bit-raw', 0, 0))
+                print('>>>')
+
+        # C DCT(VLI) + DPCM(VLI) + RLC
+        size_dct_dpcm_rlc_vli = 0
+        for index, channel in enumerate(channels):
+            encoder = DpcmRlcEncoder(channel)
+            for h in range(channel.shape[0]):
+                for w in range(channel.shape[1]):
+                    str_unit = encoder.to_string('bit-vli', h, w).replace(' ', '').replace('.', '')
+                    size_dct_dpcm_rlc_vli += len(str_unit)
+            if index == 0:
+                print('>>> DCT + DPCM(VLI) + RLC(VLI)')
+                print('Debug: @Channel_Y[0][0]')
+                print(encoder.to_string('middle-raw', 0, 0))
+                print(encoder.to_string('middle-vli', 0, 0))
+                print(encoder.to_string('bit-vli', 0, 0))
+                print('>>>')
+
+        # D DCT + DPCM + RLC + Huffman, 需要huffman编码的有DC的value(16)，AC的pre-zero(4), value(16)。
+        size_dct_dpcm_rlc_huffman = 0
+        for index, channel in enumerate(channels):
+            encoder = DpcmRlcEncoder(channel)
+            middle_codes = encoder.get_intermediate(type='raw')
+
+            # 遍历每一个块的中间码
+            signs_list_4 = list()
+            signs_list_16 = list()
+            for middle_block in middle_codes:
+                signs_list_16.append(middle_block[0])
+                for unit in middle_block[1:]:
+                    signs_list_16.append(unit[1])
+                    signs_list_4.append(unit[0])
+
+            # 建立两个huffman表
+            huffman_4 = CanonicalHuffman(signs_list_4, sign_bit_width=4)
+            huffman_16 = CanonicalHuffman(signs_list_16, sign_bit_width=16)
+
+            for h in range(channel.shape[0]):
+                for w in range(channel.shape[1]):
+                    str_unit = \
+                        encoder.to_string_huffman('bit-raw', h, w,
+                                                  huffman4=huffman_4.get_table(),
+                                                  huffman16=huffman_16.get_table()). \
+                            replace(' ', '').replace('.', '')
+                    size_dct_dpcm_rlc_huffman += len(str_unit)
+
+            # 统计huffman表的大小
+            size_dct_dpcm_rlc_huffman += huffman_4.get_canonical_table_size()
+            size_dct_dpcm_rlc_huffman += huffman_16.get_canonical_table_size()
+
+            if index == 0:
+                print('>>> DCT + DPCM + RLC + Huffman')
+                print('Debug: @Channel_Y[0][0]')
+                print(encoder.to_string('middle-raw', 0, 0))
+                print(encoder.to_string_huffman('bit-raw', 0, 0,
+                                                huffman4=huffman_4.get_table(),
+                                                huffman16=huffman_16.get_table()))
+                print('huffman4:', huffman_4.get_table())
+                print('huffman16:', huffman_16.get_table())
+                print('>>>')
+
+        # E DCT + DPCM(VLI) + RLC(VLI) + Huffman, 需要huffman编码的有DC的row(4)，AC的pre-zero(4), row(4)。
+        size_dct_dpcm_rlc_vli_huffman = 0
+        for index, channel in enumerate(channels):
+            encoder = DpcmRlcEncoder(channel)
+            middle_codes = encoder.get_intermediate(type='vli')
+
+            # 遍历每一个块的中间码
+            signs_list_4 = list()
+            for middle_block in middle_codes:
+                signs_list_4.append(middle_block[0][0])
+                for unit in middle_block[1:]:
+                    signs_list_4.append(unit[0])
+                    signs_list_4.append(unit[1])
+
+            # 建立两个huffman表
+            huffman_4 = CanonicalHuffman(signs_list_4, sign_bit_width=4)
+
+            for h in range(channel.shape[0]):
+                for w in range(channel.shape[1]):
+                    str_unit = \
+                        encoder.to_string_huffman('bit-vli', h, w,
+                                                  huffman4=huffman_4.get_table(),
+                                                  huffman16=None). \
+                            replace(' ', '').replace('.', '')
+                    size_dct_dpcm_rlc_vli_huffman += len(str_unit)
+
+            # 统计huffman表的大小
+            size_dct_dpcm_rlc_vli_huffman += huffman_4.get_canonical_table_size()
+
+            if index == 0:
+                print('>>> DCT + DPCM(VLI) + RLC(VLI) + Huffman')
+                print('Debug: @Channel_Y[0][0]')
+                print(encoder.to_string('middle-raw', 0, 0))
+                print(encoder.to_string('middle-vli', 0, 0))
+                print(encoder.to_string_huffman('bit-vli', 0, 0,
+                                                huffman4=huffman_4.get_table(),
+                                                huffman16=None))
+                print('huffman4:', huffman_4.get_table())
+                print('>>>')
+
+        # 统计与输出
+        print('BMP照片（基准）大小 {}'.format(baseline // 8))
+        print('DCT + RLC + DPCM 压缩大小 {} Bytes, 压缩比 {:.3f}'.format(size_dct_dpcm_rlc // 8, size_dct_dpcm_rlc / baseline))
+        print('DCT + RLC(VLI) + DPCM(VLI) 压缩大小 {} Bytes, 压缩比 {:.3f}'.
+              format(size_dct_dpcm_rlc_vli // 8, size_dct_dpcm_rlc_vli / baseline))
+        print('DCT + RLC + DPCM + Huffman 压缩大小 {} Bytes, 压缩比 {:.3f}'.
+              format(size_dct_dpcm_rlc_huffman // 8, size_dct_dpcm_rlc_huffman / baseline))
+        print('DCT + RLC(VLI) + DPCM(VLI) + Huffman 压缩大小 {} Bytes, 压缩比 {:.3f}'.
+              format(size_dct_dpcm_rlc_vli_huffman // 8, size_dct_dpcm_rlc_vli_huffman / baseline))
 
     def quality_evaluate(self):
         src, dst = self.get_show_arrays()
@@ -189,4 +343,5 @@ if __name__ == '__main__':
     fig, axes = plt.subplots(4, 2, figsize=(12, 24))
     demo.export_image(axes=axes)
     demo.quality_evaluate()
+    # demo.storage_compress_evaluate()
     fig.show()

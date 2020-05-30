@@ -83,6 +83,7 @@ class CanonicalHuffman:
                 if pre_length == len(v):
                     canonical_table[k] = '{:b}'.format(pre_value + 1).zfill(len(v))
                     pre_value += 1
+                # rule：binary code with larger length, besides + 1, then << (new_len - old_len)
                 else:
                     canonical_table[k] = '{:b}'.format((pre_value + 1) << (len(v) - pre_length)).zfill(len(v))
                     pre_value = (pre_value + 1) << (len(v) - pre_length)

@@ -88,15 +88,15 @@ class DpcmRlcEncoder:
             bits_str = ''
             # DC
             if block_result[0] >= 0:
-                bits_str += '{:0>8b}'.format(block_result[0])
+                bits_str += '{:0>16b}'.format(block_result[0])
             else:
-                bits_str += '1{:0>7b}'.format(abs(block_result[0]))
+                bits_str += '1{:0>15b}'.format(abs(block_result[0]))
             # AC
             for i in range(1, len(block_result)):
                 if block_result[i][1] >= 0:
-                    bits_str += ' {:0>4b}.{:0>8b}'.format(block_result[i][0], block_result[i][1])
+                    bits_str += ' {:0>4b}.{:0>16b}'.format(block_result[i][0], block_result[i][1])
                 else:
-                    bits_str += ' {:0>4b}.1{:0>7b}'.format(block_result[i][0], abs(block_result[i][1]))
+                    bits_str += ' {:0>4b}.1{:0>15b}'.format(block_result[i][0], abs(block_result[i][1]))
             return bits_str
 
         # 无VLI变长编码的中间码
@@ -108,6 +108,36 @@ class DpcmRlcEncoder:
         elif type == 'middle-vli':
             result = self.get_intermediate(type='vli')
             return result[self.get_index(h, w)]
+        else:
+            raise Exception('No such format {}.'.format(type))
+
+    def to_string_huffman(self, type, h, w, huffman4, huffman16):
+        # 有VLI编码的二进制形式
+        if type == 'bit-vli':
+            result = self.get_intermediate(type='vli')
+            index = self.get_index(h, w)
+            block_result = result[index]
+            bits_str = ''
+            # DC
+            bits_str += huffman4[block_result[0][0]] + '.' + block_result[0][1]
+            # AC
+            for i in range(1, len(block_result)):
+                bits_str += ' ' + huffman4[block_result[i][0]] + '.' + \
+                            huffman4[block_result[i][1]] + '.' + block_result[i][2]
+            return bits_str
+
+        # 无VLI编码的二进制形式
+        elif type == 'bit-raw':
+            result = self.get_intermediate(type='raw')
+            index = self.get_index(h, w)
+            block_result = result[index]
+            bits_str = ''
+            # DC
+            bits_str += huffman16[block_result[0]]
+            # AC
+            for i in range(1, len(block_result)):
+                bits_str += ' ' + huffman4[block_result[i][0]] + '.' + huffman16[block_result[i][1]]
+            return bits_str
         else:
             raise Exception('No such format {}.'.format(type))
 
