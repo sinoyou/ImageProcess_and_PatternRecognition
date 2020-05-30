@@ -136,8 +136,8 @@ class ImageCodec:
             src_sub = np.stack([src_sub, src_sub, src_sub], axis=-1)
             dst_sub = self.compressed_yuv[i][:self.real_h, :self.real_w]
             dst_sub = np.stack([dst_sub, dst_sub, dst_sub], axis=-1)
-            axes[i + 1][0].imshow(src_sub)
-            axes[i + 1][1].imshow(dst_sub)
+            axes[i + 1][0].imshow(np.clip(src_sub, 0, 255))
+            axes[i + 1][1].imshow(np.clip(dst_sub, 0, 255))
 
         return axes
 
@@ -314,14 +314,15 @@ class ImageCodec:
                 print('>>>')
 
         # 统计与输出
-        print('BMP照片（基准）大小 {}'.format(baseline // 8))
-        print('DCT + RLC + DPCM 压缩大小 {} Bytes, 压缩比 {:.3f}'.format(size_dct_dpcm_rlc // 8, size_dct_dpcm_rlc / baseline))
-        print('DCT + RLC(VLI) + DPCM(VLI) 压缩大小 {} Bytes, 压缩比 {:.3f}'.
-              format(size_dct_dpcm_rlc_vli // 8, size_dct_dpcm_rlc_vli / baseline))
-        print('DCT + RLC + DPCM + Huffman 压缩大小 {} Bytes, 压缩比 {:.3f}'.
-              format(size_dct_dpcm_rlc_huffman // 8, size_dct_dpcm_rlc_huffman / baseline))
-        print('DCT + RLC(VLI) + DPCM(VLI) + Huffman 压缩大小 {} Bytes, 压缩比 {:.3f}'.
-              format(size_dct_dpcm_rlc_vli_huffman // 8, size_dct_dpcm_rlc_vli_huffman / baseline))
+        print('BMP照片（基准）大小 {} Bytes = {:.3f} KB'.format(baseline // 8, baseline / 8 / 1024))
+        print('DCT + RLC + DPCM 压缩大小 {:3f} KB, 压缩比 {:.3f}'.format(size_dct_dpcm_rlc / 8 / 1024,
+                                                                  size_dct_dpcm_rlc / baseline))
+        print('DCT + RLC(VLI) + DPCM(VLI) 压缩大小 {:.3f} KB, 压缩比 {:.3f}'.
+              format(size_dct_dpcm_rlc_vli / 8 / 1024, size_dct_dpcm_rlc_vli / baseline))
+        print('DCT + RLC + DPCM + Huffman 压缩大小 {:.3f} KB, 压缩比 {:.3f}'.
+              format(size_dct_dpcm_rlc_huffman / 8 / 1024, size_dct_dpcm_rlc_huffman / baseline))
+        print('DCT + RLC(VLI) + DPCM(VLI) + Huffman 压缩大小 {:.3f} KB, 压缩比 {:.3f}'.
+              format(size_dct_dpcm_rlc_vli_huffman / 8 / 1024, size_dct_dpcm_rlc_vli_huffman / baseline))
 
     def quality_evaluate(self):
         src, dst = self.get_show_arrays()
@@ -339,9 +340,10 @@ class ImageCodec:
 
 if __name__ == '__main__':
     quantize_matrix = [quant.canon_digital_fine_lum, quant.canon_digital_fine_chr]
+    # quantize_matrix = quant.slide_42_matrix
     demo = ImageCodec('image/lena.jpg', quantization=quantize_matrix, gray=False)
     fig, axes = plt.subplots(4, 2, figsize=(12, 24))
     demo.export_image(axes=axes)
     demo.quality_evaluate()
-    # demo.storage_compress_evaluate()
+    demo.storage_compress_evaluate()
     fig.show()
