@@ -1,5 +1,5 @@
 import numpy as np
-from src.utils import mirror
+from src.FourierTransformation.src.utils import mirror
 
 
 def ideal_low_pass_filter(fre_domain, **kwargs):

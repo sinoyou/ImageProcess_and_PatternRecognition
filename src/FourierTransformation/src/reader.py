@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
-from src.utils import mirror
+from src.FourierTransformation.src.utils import mirror
 
 
 class ImageIO:
@@ -11,13 +11,30 @@ class ImageIO:
         self.gray_array = np.array(color_image.convert('L'), dtype=int)
 
     def get_color(self):
-        return self.color_array
+        """
+        Return (Y, U, V) as order.
+        :return:
+        """
+        R, G, B = [np.squeeze(x, axis=-1) for x in np.split(self.color_array, 3, axis=-1)]
+        Y = 0.299 * R + 0.587 * G + 0.114 * B
+        U = -0.169 * R - 0.331 * G + 0.5 * B + 128
+        V = 0.5 * R - 0.419 * G - 0.081 * B + 128
+        yuv = [Y.astype(int), U.astype(int), V.astype(int)]
+        return yuv
 
     def get_gray(self, norm=True):
         if norm:
             return self.gray_array * 1.0 / 255
         else:
             return self.gray_array
+
+    @staticmethod
+    def yuv_to_rgb(yuv_list):
+        Y, U, V = yuv_list[0], yuv_list[1], yuv_list[2]
+        R = Y + 1.4075 * (V - 128)
+        G = Y - 0.3455 * (U - 128) - 0.7169 * (V - 128)
+        B = Y + 1.779 * (U - 128)
+        return [R.astype(int), G.astype(int), B.astype(int)]
 
     @staticmethod
     def get_visual_frequency_domain(frequency_domain, center=True, log=True):
