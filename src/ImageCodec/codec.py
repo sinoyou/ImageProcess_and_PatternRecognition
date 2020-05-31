@@ -316,13 +316,13 @@ class ImageCodec:
         # 统计与输出
         print('BMP照片（基准）大小 {} Bytes = {:.3f} KB'.format(baseline // 8, baseline / 8 / 1024))
         print('DCT + RLC + DPCM 压缩大小 {:3f} KB, 压缩比 {:.3f}'.format(size_dct_dpcm_rlc / 8 / 1024,
-                                                                  size_dct_dpcm_rlc / baseline))
+                                                                   baseline / size_dct_dpcm_rlc))
         print('DCT + RLC(VLI) + DPCM(VLI) 压缩大小 {:.3f} KB, 压缩比 {:.3f}'.
-              format(size_dct_dpcm_rlc_vli / 8 / 1024, size_dct_dpcm_rlc_vli / baseline))
+              format(size_dct_dpcm_rlc_vli / 8 / 1024,  baseline / size_dct_dpcm_rlc_vli))
         print('DCT + RLC + DPCM + Huffman 压缩大小 {:.3f} KB, 压缩比 {:.3f}'.
-              format(size_dct_dpcm_rlc_huffman / 8 / 1024, size_dct_dpcm_rlc_huffman / baseline))
+              format(size_dct_dpcm_rlc_huffman / 8 / 1024,  baseline / size_dct_dpcm_rlc_huffman))
         print('DCT + RLC(VLI) + DPCM(VLI) + Huffman 压缩大小 {:.3f} KB, 压缩比 {:.3f}'.
-              format(size_dct_dpcm_rlc_vli_huffman / 8 / 1024, size_dct_dpcm_rlc_vli_huffman / baseline))
+              format(size_dct_dpcm_rlc_vli_huffman / 8 / 1024,  baseline / size_dct_dpcm_rlc_vli_huffman))
 
     def quality_evaluate(self):
         src, dst = self.get_show_arrays()
